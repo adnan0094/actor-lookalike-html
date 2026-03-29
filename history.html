@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>السجل - ممثل شبيه</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">
+                    <span class="logo-icon">📷</span>
+                    <span class="logo-text">ممثل شبيه</span>
+                </div>
+                <button class="language-toggle" id="langToggle">
+                    <span class="globe-icon">🌐</span>
+                    <span id="langText">EN</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- History Container -->
+    <div class="history-container">
+        <div class="container">
+            <!-- Back Button -->
+            <button class="back-btn" onclick="navigateTo('index')">
+                <span class="arrow">→</span>
+                <span id="backText">العودة للرئيسية</span>
+            </button>
+
+            <!-- Header -->
+            <div class="history-header">
+                <h1 id="historyTitle">سجل المقارنات</h1>
+                <p id="historySubtitle">عرض جميع المقارنات السابقة الخاصة بك</p>
+            </div>
+
+            <!-- History List -->
+            <div id="historyContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p id="loadingText">جاري تحميل السجل...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/translations.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/history.js"></script>
+</body>
+</html>
