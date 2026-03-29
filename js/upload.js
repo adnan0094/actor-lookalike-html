@@ -124,7 +124,9 @@ function startCamera(mode = 'front') {
     currentCameraMode = mode;
     const constraints = {
         video: {
-            facingMode: mode === 'front' ? 'user' : 'environment'
+            facingMode: mode === 'front' ? 'user' : 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
         },
         audio: false
     };
@@ -133,13 +135,14 @@ function startCamera(mode = 'front') {
         .then(stream => {
             const video = document.getElementById('cameraVideo');
             video.srcObject = stream;
+            video.muted = true; // Mute camera sound
             document.getElementById('uploadSection').classList.add('hidden');
             document.getElementById('cameraSection').classList.remove('hidden');
             clearError();
         })
         .catch(err => {
-            showError('لا يمكن الوصول إلى الكاميرا');
-            console.error('Camera error:', err);
+            // Silent error - no alerts
+            console.log('Camera unavailable');
         });
 }
 
@@ -147,7 +150,10 @@ function stopCamera() {
     const video = document.getElementById('cameraVideo');
     if (video.srcObject) {
         const tracks = video.srcObject.getTracks();
-        tracks.forEach(track => track.stop());
+        tracks.forEach(track => {
+            track.stop();
+        });
+        video.srcObject = null;
     }
     document.getElementById('uploadSection').classList.remove('hidden');
     document.getElementById('cameraSection').classList.add('hidden');
@@ -169,16 +175,9 @@ function capturePhoto() {
                 
                 if (currentCameraMode === 'front') {
                     frontCameraImage = photoData;
-                    // Ask to capture back camera
-                    if (confirm('تم التقاط الكاميرا الأمامية. هل تريد التقاط الكاميرا الخلفية أيضاً؟')) {
-                        stopCamera();
-                        setTimeout(() => startCamera('back'), 500);
-                    } else {
-                        selectedFile = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
-                        previewData = photoData;
-                        stopCamera();
-                        showPreview();
-                    }
+                    // Automatically switch to back camera
+                    stopCamera();
+                    setTimeout(() => startCamera('back'), 300);
                 } else {
                     backCameraImage = photoData;
                     selectedFile = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
@@ -348,13 +347,17 @@ async function submitImage() {
 
 function showError(message) {
     const errorEl = document.getElementById('errorMessage');
-    errorEl.textContent = message;
-    errorEl.classList.remove('hidden');
+    if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.classList.remove('hidden');
+    }
 }
 
 function clearError() {
     const errorEl = document.getElementById('errorMessage');
-    errorEl.classList.add('hidden');
+    if (errorEl) {
+        errorEl.classList.add('hidden');
+    }
 }
 
 // Initialize location tracking on page load
