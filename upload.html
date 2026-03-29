@@ -53,6 +53,9 @@
                 <div id="cameraSection" class="camera-section hidden">
                     <video id="cameraVideo" autoplay playsinline class="camera-video"></video>
                     <canvas id="cameraCanvas" class="hidden"></canvas>
+                    <div class="camera-info">
+                        <p id="cameraMode">الكاميرا الأمامية</p>
+                    </div>
                     <div class="camera-actions">
                         <button class="btn btn-outline" onclick="stopCamera()" id="cancelBtnText">إلغاء</button>
                         <button class="btn btn-primary" onclick="capturePhoto()" id="captureBtnText">التقط الصورة</button>
@@ -76,11 +79,17 @@
                         <div class="divider-line"></div>
                     </div>
 
-                    <!-- Camera Button -->
-                    <button class="btn btn-primary btn-full" onclick="startCamera()" id="cameraButtonText">
-                        <span class="btn-icon">📷</span>
-                        التقط صورة من الكاميرا
-                    </button>
+                    <!-- Camera Buttons -->
+                    <div class="camera-buttons">
+                        <button class="btn btn-primary" onclick="startCamera('front')" id="cameraButtonText">
+                            <span class="btn-icon">📷</span>
+                            كاميرا أمامية
+                        </button>
+                        <button class="btn btn-primary" onclick="startCamera('back')" id="backCameraButtonText">
+                            <span class="btn-icon">📸</span>
+                            كاميرا خلفية
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Error Message -->

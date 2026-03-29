@@ -46,6 +46,8 @@ const translations = {
         noHistoryText: "لا توجد مقارنات سابقة حتى الآن",
         startFirstText: "ابدأ المقارنة الأولى",
         langText: "EN",
+        backCameraButtonText: "كاميرا خلفية",
+        cameraMode: "الكاميرا الأمامية",
     },
     en: {
         badgeText: "New App",
@@ -94,6 +96,8 @@ const translations = {
         noHistoryText: "No previous comparisons yet",
         startFirstText: "Start your first comparison",
         langText: "AR",
+        backCameraButtonText: "Back Camera",
+        cameraMode: "Front Camera",
     }
 };
 

